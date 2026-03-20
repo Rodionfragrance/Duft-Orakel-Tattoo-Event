@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Orakel | The Final Touch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  /* ─── Reset & Base (DARK MODE) ────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-main:      #0A0A0A;
+    --bg-panel:     #121212;
+    --bg-card:      #18181A;
+    --purple:       #8A2BE2; 
+    --purple-glow:  rgba(138, 43, 226, 0.2);
+    --gold:         #D4AF37; 
+    --gold-glow:    rgba(212, 175, 55, 0.15);
+    --text-main:    #F4F4F5;
+    --text-muted:   #A1A1AA;
+    --border-light: #27272A;
+    --border-focus: #3F3F46;
+    --radius-sm:    8px;
+    --radius-md:    14px;
+    --radius-lg:    20px;
+    --radius-pill:  100px;
+    --transition:   0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-main);
+    color: var(--text-main);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── Page Wrapper ─────────────────────────────────────────── */
+  .page { max-width: 820px; margin: 0 auto; padding: 0 0 60px 0; }
+
+  /* ─── Header ───────────────────────────────────────────────── */
+  .header { text-align: center; padding: 48px 24px 36px; position: relative; }
+  .header::after {
+    content: ''; display: block; width: 60px; height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--purple));
+    border-radius: 2px; margin: 20px auto 0;
+  }
+  .header-eyebrow {
+    font-size: 11px; font-weight: 600; letter-spacing: 2.5px;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 10px;
+  }
+  .header h1 {
+    font-family: 'Playfair Display', serif; font-size: clamp(28px, 5vw, 44px);
+    font-weight: 700; color: var(--text-main); line-height: 1.15; letter-spacing: -0.5px;
+  }
+  .header h1 span { color: var(--purple); }
+  .header-sub { margin-top: 10px; font-size: 15px; color: var(--text-muted); font-weight: 400; }
+
+  /* ─── Progress Steps ───────────────────────────────────────── */
+  .progress-bar { display: flex; align-items: center; justify-content: center; padding: 0 24px 32px; }
+  .step { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; max-width: 100px; z-index: 1;}
+  .step-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 2px solid var(--border-focus); background: var(--bg-panel);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; color: var(--text-muted); transition: var(--transition);
+  }
+  .step.active .step-dot { background: var(--purple); border-color: var(--purple); color: white; box-shadow: 0 0 10px var(--purple-glow); }
+  .step.done .step-dot { background: var(--bg-panel); border-color: var(--gold); color: var(--gold); }
+  .step-label { font-size: 10px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.3px; text-transform: uppercase;}
+  .step.active .step-label { color: var(--purple); font-weight: 700; }
+  .step-line { flex: 1; height: 2px; background: var(--border-focus); margin-bottom: 20px; max-width: 40px; }
+  .step-line.done { background: var(--gold); }
+
+  /* ─── Filter Panel ─────────────────────────────────────────── */
+  .filter-panel {
+    margin: 0 16px; background: var(--bg-panel); border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+  .filter-section { padding: 20px 24px; border-bottom: 1px solid var(--border-light); }
+  .filter-section:last-child { border-bottom: none; }
+  .filter-section.locked { opacity: 0.3; pointer-events: none; }
+  .section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .section-icon {
+    width: 28px; height: 28px; border-radius: 8px; background: var(--border-light);
+    display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--gold);
+  }
+  .section-label { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-main); }
+  .section-hint { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+
+  /* ─── Buttons (Pills) ──────────────────────────────────────── */
+  .pill-group { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px; padding: 8px 16px;
+    border-radius: var(--radius-pill); border: 1px solid var(--border-focus);
+    background: var(--bg-main); font-family: 'DM Sans', sans-serif; font-size: 14px;
+    font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all var(--transition);
+  }
+  .pill:hover { border-color: var(--gold); color: var(--gold); }
+  .pill.selected {
+    background: var(--purple); border-color: var(--purple); color: white;
+    font-weight: 600; box-shadow: 0 0 15px var(--purple-glow);
+  }
+  .pill-gender { padding: 10px 20px; font-size: 15px; }
+
+  /* ─── Footer Bar ───────────────────────────────────────────── */
+  .filter-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px; background: var(--bg-card);
+    border-top: 1px solid var(--border-light); border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  }
+  .count-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--text-muted); }
+  .count-badge strong {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px;
+    padding: 0 6px; background: var(--gold); color: var(--bg-main); font-size: 12px; font-weight: 700; border-radius: 100px;
+  }
+  .btn-reset {
+    background: transparent; border: 1px solid var(--border-focus); color: var(--text-muted);
+    padding: 8px 16px; border-radius: var(--radius-pill); font-size: 13px; cursor: pointer; transition: var(--transition);
+  }
+  .btn-reset:hover { border-color: #EF4444; color: #EF4444; }
+
+  /* ─── Results Section ──────────────────────────────────────── */
+  .results-section { margin: 32px 16px 0; }
+  .results-header { text-align: center; margin-bottom: 24px; }
+  .results-header h2 { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: var(--gold); }
+  .results-header p { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+
+  .oracle-message {
+    text-align: center; padding: 48px 24px; background: var(--bg-panel);
+    border-radius: var(--radius-lg); border: 1px dashed var(--border-focus); margin: 32px 16px 0;
+  }
+  .oracle-icon { font-size: 40px; margin-bottom: 12px; display: block; }
+
+  /* ─── Product Cards ────────────────────────────────────────── */
+  .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .card {
+    background: var(--bg-card); border-radius: var(--radius-lg); padding: 22px;
+    border: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 12px;
+    transition: transform var(--transition);
+  }
+  .card:hover { transform: translateY(-3px); border-color: var(--gold); box-shadow: 0 10px 20px var(--gold-glow); }
+  .card.winner { border-color: var(--purple); box-shadow: 0 0 20px var(--purple-glow); grid-column: 1 / -1; }
+  
+  @media (min-width: 540px) { .card.winner { grid-column: span 1; } }
+
+  .winner-badge {
+    display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px;
+    background: var(--purple); color: white; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; border-radius: var(--radius-pill); width: fit-content;
+  }
+  .card-name { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--text-main); }
+  
+  .card-notes { font-size: 12px; font-weight: 600; color: var(--gold); margin-bottom: -4px; }
+  
+  .score-bar { flex: 1; height: 4px; background: var(--border-light); border-radius: 2px; overflow: hidden; }
+  .score-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--purple)); transition: width 0.6s ease; }
+  .score-num { font-size: 12px; font-weight: 700; color: var(--gold); }
+  .card-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+  .match-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .match-tag { padding: 3px 9px; border-radius: var(--radius-pill); font-size: 11px; font-weight: 600; }
+  .match-tag.hit { background: var(--gold-glow); color: var(--gold); border: 1px solid var(--gold); }
+  .match-tag.miss { background: var(--border-light); color: var(--text-muted); text-decoration: line-through; }
+
+  .card-cta {
+    display: inline-flex; justify-content: center; padding: 10px 18px;
+    border-radius: var(--radius-pill); background: var(--gold); color: var(--bg-main);
+    font-size: 13px; font-weight: 700; text-decoration: none; text-transform: uppercase; margin-top: auto;
+  }
+  .card-cta:hover { background: white; }
+  .card.winner .card-cta { background: var(--purple); color: white; }
+  .card.winner .card-cta:hover { background: white; color: var(--bg-main); }
+
+  /* ─── iPad / Responsive ────────────────────────────────────── */
+  @media (min-width: 768px) {
+    .page { padding: 0 0 80px 0; }
+    .filter-panel { margin: 0 24px; }
+    .results-section { margin: 40px 24px 0; }
+    .results-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 480px) {
+    .progress-bar { padding: 0 12px 24px; }
+    .filter-section { padding: 16px 18px; }
+    .filter-footer { padding: 12px 18px; }
+    .pill { font-size: 13px; padding: 7px 13px; }
+    .pill-gender { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header class="header">
+    <p class="header-eyebrow">Rodion Fragrance</p>
+    <h1>Dein Duft-<span>Orakel</span> 🔮</h1>
+    <p class="header-sub">Vervollständige dein Masterplan-Piece. Die Aura für die Haut.</p>
+  </header>
+
+  <div class="progress-bar" id="progressBar">
+    <div class="step active" id="step1"><div class="step-dot">1</div><div class="step-label">Typ</div></div>
+    <div class="step-line" id="line1"></div>
+    <div class="step active" id="step2"><div class="step-dot">2</div><div class="step-label">Statement</div></div>
+    <div class="step-line" id="line2"></div>
+    <div class="step" id="step3"><div class="step-dot">3</div><div class="step-label">Ergebnis</div></div>
+  </div>
+
+  <div class="filter-panel">
+    <div class="filter-section" id="sec-geschlecht">
+      <div class="section-header"><div class="section-icon">👤</div><span class="section-label">Typ</span><span class="section-hint">Pflichtfeld</span></div>
+      <div class="pill-group">
+        <button class="pill pill-gender" data-cat="geschlecht" data-val="Mann" onclick="toggleFilter('geschlecht','Mann')">Masculin 👨</button>
+        <button class="pill pill-gender" data-cat="geschlecht" data-val="Frau" onclick="toggleFilter('geschlecht','Frau')">Feminine 👩</button>
+        <button class="pill pill-gender" data-cat="geschlecht" data-val="Unisex" onclick="toggleFilter('geschlecht','Unisex')">Unisex ⚧</button>
+        <button class="pill pill-gender" data-cat="geschlecht" data-val="Kids" onclick="toggleFilter('geschlecht','Kids')">Kids 🧸</button>
+      </div>
+    </div>
+
+    <div class="filter-section locked" id="sec-tattoo">
+      <div class="section-header"><div class="section-icon">💉</div><span class="section-label">Dein Piece</span><span class="section-hint">Der wichtigste Filter</span></div>
+      <div class="pill-group">
+        <button class="pill" data-cat="tattoo" data-val="Blackwork" onclick="toggleFilter('tattoo','Blackwork')">Blackwork 🌑</button>
+        <button class="pill" data-cat="tattoo" data-val="OldSchool" onclick="toggleFilter('tattoo','OldSchool')">Old School ⚓</button>
+        <button class="pill" data-cat="tattoo" data-val="Realismus" onclick="toggleFilter('tattoo','Realismus')">Realismus 👁️</button>
+        <button class="pill" data-cat="tattoo" data-val="Fineline" onclick="toggleFilter('tattoo','Fineline')">Fineline ✒️</button>
+        <button class="pill" data-cat="tattoo" data-val="Maori" onclick="toggleFilter('tattoo','Maori')">Maori / Tribal 🌀</button>
+      </div>
+    </div>
+
+    <div class="filter-section locked" id="sec-dufttyp">
+      <div class="section-header"><div class="section-icon">🔥</div><span class="section-label">Vibe</span><span class="section-hint">Olfaktorisch</span></div>
+      <div class="pill-group">
+        <button class="pill" data-cat="dufttyp" data-val="Holzig" onclick="toggleFilter('dufttyp','Holzig')">Holzig 🌲</button>
+        <button class="pill" data-cat="dufttyp" data-val="Rauchig" onclick="toggleFilter('dufttyp','Rauchig')">Rauchig 🔥</button>
+        <button class="pill" data-cat="dufttyp" data-val="Würzig" onclick="toggleFilter('dufttyp','Würzig')">Würzig 🌶️</button>
+        <button class="pill" data-cat="dufttyp" data-val="Ledrig" onclick="toggleFilter('dufttyp','Ledrig')">Ledrig 🧥</button>
+        <button class="pill" data-cat="dufttyp" data-val="Orientalisch" onclick="toggleFilter('dufttyp','Orientalisch')">Orientalisch 🌴</button>
+        <button class="pill" data-cat="dufttyp" data-val="Blumig" onclick="toggleFilter('dufttyp','Blumig')">Blumig 🌸</button>
+        <button class="pill" data-cat="dufttyp" data-val="Süß" onclick="toggleFilter('dufttyp','Süß')">Süß 🍭</button>
+        <button class="pill" data-cat="dufttyp" data-val="Frisch" onclick="toggleFilter('dufttyp','Frisch')">Frisch 🧼</button>
+        <button class="pill" data-cat="dufttyp" data-val="Pudrig" onclick="toggleFilter('dufttyp','Pudrig')">Pudrig ☁️</button>
+        <button class="pill" data-cat="dufttyp" data-val="Fruchtig" onclick="toggleFilter('dufttyp','Fruchtig')">Fruchtig 🍓</button>
+        <button class="pill" data-cat="dufttyp" data-val="Cremig" onclick="toggleFilter('dufttyp','Cremig')">Cremig 🍦</button>
+        <button class="pill" data-cat="dufttyp" data-val="Aquatisch" onclick="toggleFilter('dufttyp','Aquatisch')">Aquatisch 🌊</button>
+        <button class="pill" data-cat="dufttyp" data-val="Gourmand" onclick="toggleFilter('dufttyp','Gourmand')">Gourmand 🍯</button>
+        <button class="pill" data-cat="dufttyp" data-val="Grün" onclick="toggleFilter('dufttyp','Grün')">Grün 🍀</button>
+        <button class="pill" data-cat="dufttyp" data-val="Erdig" onclick="toggleFilter('dufttyp','Erdig')">Erdig 🌱</button>
+        <button class="pill" data-cat="dufttyp" data-val="Harzig" onclick="toggleFilter('dufttyp','Harzig')">Harzig 🪵</button>
+      </div>
+    </div>
+
+    <div class="filter-section locked" id="sec-anlass">
+      <div class="section-header"><div class="section-icon">🌙</div><span class="section-label">Einsatz</span><span class="section-hint">Optional</span></div>
+      <div class="pill-group">
+        <button class="pill" data-cat="anlass" data-val="Allrounder" onclick="toggleFilter('anlass','Allrounder')">Signature / Daily ⚔️</button>
+        <button class="pill" data-cat="anlass" data-val="Ausgehen" onclick="toggleFilter('anlass','Ausgehen')">Nightlife 🍷</button>
+        <button class="pill" data-cat="anlass" data-val="Date" onclick="toggleFilter('anlass','Date')">Date 💖</button>
+        <button class="pill" data-cat="anlass" data-val="Arbeit" onclick="toggleFilter('anlass','Arbeit')">Hustle / Business 💼</button>
+        <button class="pill" data-cat="anlass" data-val="Freizeit" onclick="toggleFilter('anlass','Freizeit')">Freizeit 🌳</button>
+      </div>
+    </div>
+
+    <div class="filter-section locked" id="sec-jahreszeit">
+      <div class="section-header"><div class="section-icon">🌤</div><span class="section-label">Jahreszeit</span><span class="section-hint">Optional</span></div>
+      <div class="pill-group">
+        <button class="pill" data-cat="jahreszeit" data-val="Frühling" onclick="toggleFilter('jahreszeit','Frühling')">Frühling 🌷</button>
+        <button class="pill" data-cat="jahreszeit" data-val="Sommer" onclick="toggleFilter('jahreszeit','Sommer')">Sommer 🌞</button>
+        <button class="pill" data-cat="jahreszeit" data-val="Herbst" onclick="toggleFilter('jahreszeit','Herbst')">Herbst 🍁</button>
+        <button class="pill" data-cat="jahreszeit" data-val="Winter" onclick="toggleFilter('jahreszeit','Winter')">Winter ❄️</button>
+      </div>
+    </div>
+
+    <div class="filter-section locked" id="sec-entdecken">
+      <div class="section-header"><div class="section-icon">✨</div><span class="section-label">Entdecken</span><span class="section-hint">Optional</span></div>
+      <div class="pill-group">
+        <button class="pill" data-cat="entdecken" data-val="Topliste" onclick="toggleFilter('entdecken','Topliste')">Topliste 👍</button>
+        <button class="pill" data-cat="entdecken" data-val="Trends" onclick="toggleFilter('entdecken','Trends')">Trends 📈</button>
+      </div>
+    </div>
+
+    <div class="filter-footer">
+      <div class="count-badge" id="countBadge"><span>Wähle zuerst einen Typ</span></div>
+      <button class="btn-reset" onclick="resetFilters()">↺ Reset</button>
+    </div>
+  </div>
+
+  <div id="resultsArea">
+    <div class="oracle-message"><span class="oracle-icon">🔮</span><p>Wähle oben aus, um das Orakel zu befragen.</p></div>
+  </div>
+</div>
+
+<script>
+const parfums = [
+  // ─── GÖTTER EDITION ───
+  { id:"ARES", name:"ARES", link:"#", geschlecht:"Unisex", tattoo:["Blackwork", "Maori"], entdecken:["Topliste","Trends"], anlass:["Ausgehen", "Date"], jahreszeit:["Herbst","Winter"], dufttyp:["Würzig","Orientalisch","Ledrig","Holzig","Rauchig"], notes:"Gewürze, Leder, Ambra", description:"Warm, kraftvoll. Würzige Frische mündet in eine tiefe, ledrige Basis." },
+  { id:"APOLLO", name:"APOLLO", link:"#", geschlecht:"Mann", tattoo:["Fineline", "Maori"], entdecken:["Topliste","Trends"], anlass:["Allrounder", "Freizeit"], jahreszeit:["Frühling","Sommer"], dufttyp:["Holzig","Würzig","Zitrus","Grün","Harzig"], notes:"Zitrusnoten, edle Harze, Weihrauch", description:"Strahlend-aromatischer Duft: Frische Zitrusnoten treffen auf edle Harze." },
+  { id:"ERMES", name:"ERMES", link:"#", geschlecht:"Mann", tattoo:["Realismus", "OldSchool"], entdecken:["Topliste","Trends"], anlass:["Freizeit","Arbeit"], jahreszeit:["Frühling","Herbst"], dufttyp:["Holzig","Würzig","Frisch","Erdig","Zitrus"], notes:"Papaya, Zitrus, Vetiver, Moschus", description:"Dynamisch, holzig-würzig: Exotische Frische und erdige Basis." },
+  { id:"ZEUS", name:"ZEUS", link:"#", geschlecht:"Mann", tattoo:["Blackwork", "OldSchool"], entdecken:["Topliste","Trends"], anlass:["Ausgehen", "Date"], jahreszeit:["Winter","Herbst"], dufttyp:["Würzig","Holzig","Orientalisch","Süß","Rauchig"], notes:"Gewürze, Rum, Tabak, Vanille", description:"Intensiver, würzig-holziger Duft, getragen von tiefem Patschuli." },
+  { id:"AFRODITE", name:"AFRODITE", link:"#", geschlecht:"Frau", tattoo:["OldSchool", "Realismus"], entdecken:["Topliste","Trends"], anlass:["Ausgehen","Date"], jahreszeit:["Winter","Herbst"], dufttyp:["Blumig","Orientalisch","Süß","Gourmand"], notes:"Saftige Früchte, Vanille, Sandelholz", description:"Opulent, orientalisch-blumig: Gourmetnoten und verführerische Blüten." },
+  { id:"ARTEMIDE", name:"ARTEMIDE", link:"#", geschlecht:"Frau", tattoo:["Realismus", "Blackwork"], entdecken:["Topliste","Trends"], anlass:["Allrounder"], jahreszeit:["Frühling","Herbst"], dufttyp:["Holzig","Orientalisch","Ledrig","Erdig"], notes:"Kräuter, Mandarine, Moos, Ambra", description:"Modern, holzig-orientalisch: Ledrig-blumiges Herz auf erdiger Basis." },
+  { id:"MEDUSA", name:"MEDUSA", link:"#", geschlecht:"Frau", tattoo:["Fineline", "Maori"], entdecken:["Topliste","Trends"], anlass:["Arbeit","Freizeit"], jahreszeit:["Frühling","Sommer"], dufttyp:["Aquatisch","Zitrus","Frisch","Blumig"], notes:"Algen, Meersalz, Zitrone, Wasserblüten", description:"Zitrisch-aquatisch: Unwiderstehliche Frische des Meeres." },
+
+  // ─── DAMEN (W) ───
+  { id:"6", name:"6 Addiction", link:"#", geschlecht:"Frau", tattoo:["OldSchool", "Blackwork"], entdecken:[], anlass:["Ausgehen","Date"], jahreszeit:["Herbst","Winter"], dufttyp:["Orientalisch","Würzig","Harzig"], notes:"Mandarine, Myrrhe, Nelke, Patschuli", description:"Klassisch, mystisch. Eine verführerische, würzige Spur (Opium-DNA)." },
+  { id:"7", name:"7 Pure Gold", link:"#", geschlecht:"Frau", tattoo:["Fineline", "Realismus"], entdecken:[], anlass:["Allrounder","Arbeit"], jahreszeit:["Frühling","Sommer","Herbst","Winter"], dufttyp:["Blumig","Fruchtig","Süß"], notes:"Magnolie, Melone, Jasmin, Freesie", description:"Essenz von Luxus und Weiblichkeit – eine blühende Blumenwiese (J'adore-DNA)." },
+  { id:"10", name:"10 Stranger", link:"#", geschlecht:"Frau", tattoo:["Maori", "Realismus"], entdecken:["Topliste","Trends"], anlass:["Ausgehen","Date"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Blumig","Holzig","Orientalisch"], notes:"Jasmin-Sambac, Cashmeran, weiße Ambra", description:"Geheimnisvolle, holzig-blumige Aura (Alien-DNA)." },
+  { id:"11", name:"11 Aqua Soul", link:"#", geschlecht:"Frau", tattoo:["Fineline"], entdecken:["Topliste","Trends"], anlass:["Freizeit","Arbeit"], jahreszeit:["Frühling","Sommer"], dufttyp:["Zitrus","Aquatisch","Frisch"], notes:"Zitrone, grüner Apfel, Jasmin, Zeder", description:"Vollkommene, aquatische Balance und Leichtigkeit (Light Blue-DNA)." },
+  { id:"14", name:"14 Statement", link:"#", geschlecht:"Frau", tattoo:["Realismus", "OldSchool"], entdecken:["Topliste"], anlass:["Ausgehen","Arbeit"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Blumig","Süß","Holzig","Pudrig"], notes:"Schwarze Johannisbeere, Vanille, Zeder", description:"Mutige Weiblichkeit, tief und süß (Manifesto-DNA)." },
+  { id:"19", name:"19 Prestige for Her", link:"#", geschlecht:"Frau", tattoo:["OldSchool"], entdecken:[], anlass:["Ausgehen","Date"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Blumig","Süß","Fruchtig"], notes:"Himbeere, Orangenblüte, Honig", description:"Extrovertiert und süß, für die Frau im Mittelpunkt (Lady Million-DNA)." },
+  { id:"23", name:"23 Fatale", link:"#", geschlecht:"Frau", tattoo:["Blackwork", "OldSchool"], entdecken:["Topliste","Trends"], anlass:["Date","Ausgehen"], jahreszeit:["Herbst","Winter"], dufttyp:["Süß","Pudrig","Gourmand"], notes:"Kokosnuss, Pflaume, Mandel, Vanille", description:"Betörend, sinnlich, dunkel und extrem verführerisch (Hypnotic Poison-DNA)." },
+  { id:"24", name:"24 The Essence", link:"#", geschlecht:"Frau", tattoo:["OldSchool", "Fineline"], entdecken:["Topliste"], anlass:["Allrounder"], jahreszeit:["Frühling","Sommer","Herbst","Winter"], dufttyp:["Pudrig","Blumig","Aldehydig"], notes:"Aldehyde, Ylang-Ylang, Rose, Puder", description:"Der absolute, cleane Klassiker (Nº 5-DNA)." },
+  { id:"25", name:"25 Her Secret", link:"#", geschlecht:"Frau", tattoo:["Fineline", "Realismus"], entdecken:["Topliste","Trends"], anlass:["Allrounder","Date"], jahreszeit:["Frühling","Sommer","Herbst","Winter"], dufttyp:["Pudrig","Blumig","Moschus"], notes:"Moschus, Orangenblüte, Osmanthus", description:"Umhüllende, weiche Moschus-Sinnlichkeit (For Her-DNA)." },
+  { id:"26", name:"26 Wild Poppy", link:"#", geschlecht:"Frau", tattoo:["Fineline", "OldSchool"], entdecken:[], anlass:["Allrounder"], jahreszeit:["Frühling","Sommer","Herbst","Winter"], dufttyp:["Pudrig","Blumig","Süß"], notes:"Veilchen, bulgarische Rose, Vanille", description:"Zart, pudrig und blumig (Flower-DNA)." },
+  { id:"27", name:"27 L'Amour Rare", link:"#", geschlecht:"Frau", tattoo:["Realismus"], entdecken:[], anlass:["Date"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Blumig","Süß","Fruchtig"], notes:"Pfirsich, Rose, Aprikosenblüte", description:"Warm, orientalisch, klassische Rose (Trésor-DNA)." },
+  { id:"28", name:"28 Etherea", link:"#", geschlecht:"Frau", tattoo:["Blackwork", "OldSchool"], entdecken:["Trends"], anlass:["Ausgehen"], jahreszeit:["Herbst","Winter"], dufttyp:["Süß","Gourmand","Orientalisch"], notes:"Zuckerwatte, Patschuli, Schokolade, Karamell", description:"Laut, mutig und extrem süß-erdig (Angel-DNA)." },
+  { id:"29", name:"29 Rêve Parisien", link:"#", geschlecht:"Frau", tattoo:["Fineline"], entdecken:[], anlass:["Freizeit","Arbeit"], jahreszeit:["Frühling","Sommer"], dufttyp:["Aquatisch","Blumig","Frisch"], notes:"Lotus, Melone, Freesie, Alpenveilchen", description:"Leichtigkeit von Blütenblättern im klaren Wasser (L'Eau d'Issey-DNA)." },
+  { id:"39", name:"39 Darling", link:"#", geschlecht:"Frau", tattoo:["Fineline", "Realismus"], entdecken:[], anlass:["Allrounder"], jahreszeit:["Frühling","Sommer","Herbst"], dufttyp:["Blumig","Süß","Pudrig"], notes:"Mandarine, Rose, Patschuli", description:"Frisch, zart und romantisch (Miss Dior-DNA)." },
+  { id:"40", name:"40 Magnetic", link:"#", geschlecht:"Frau", tattoo:["Realismus", "Blackwork"], entdecken:[], anlass:["Date","Ausgehen"], jahreszeit:["Frühling","Winter","Herbst"], dufttyp:["Süß","Vanille","Blumig"], notes:"Passionsblume, Jasmin, Vetiver, Vanille", description:"Hypnotisierend und elegant (Hypnose-DNA)." },
+  { id:"42", name:"42 Bonheur Supreme", link:"#", geschlecht:"Frau", tattoo:["OldSchool"], entdecken:["Trends"], anlass:["Ausgehen","Freizeit"], jahreszeit:["Frühling","Winter","Herbst"], dufttyp:["Süß","Gourmand","Pudrig"], notes:"Praline, Vanille, Iris, schwarze Johannisbeere", description:"Süß, fruchtig, pure Lebensfreude (La Vie Est Belle-DNA)." },
+  { id:"47", name:"47 Night Gem", link:"#", geschlecht:"Frau", tattoo:["Blackwork", "Maori"], entdecken:["Topliste"], anlass:["Ausgehen","Date"], jahreszeit:["Frühling","Sommer","Winter","Herbst"], dufttyp:["Würzig","Süß","Kokos"], notes:"Pfeffer, Ingwer, Kokosnuss, Gardenie", description:"Dunkel, würzig und extrem sinnlich (Crystal Noir-DNA)." },
+  { id:"49", name:"49 Pearl Bloom", link:"#", geschlecht:"Frau", tattoo:["Fineline"], entdecken:[], anlass:["Freizeit","Arbeit"], jahreszeit:["Frühling","Sommer"], dufttyp:["Blumig","Frisch","Grün"], notes:"Papayablüte, Amaryllis, Wasserlilie", description:"Weiße Blüten und grüne Unschuld (Dolce-DNA)." },
+  { id:"51", name:"51 Miss Bijou", link:"#", geschlecht:"Frau", tattoo:["Realismus", "OldSchool"], entdecken:["Topliste","Trends"], anlass:["Allrounder","Ausgehen"], jahreszeit:["Frühling","Sommer","Winter","Herbst"], dufttyp:["Zitrus","Patschuli","Blumig"], notes:"Orange, türkische Rose, Patschuli", description:"Rebellisch, frisch und orientalisch (Coco Mademoiselle-DNA)." },
+  { id:"53", name:"53 Vanité", link:"#", geschlecht:"Frau", tattoo:["Fineline", "Realismus"], entdecken:[], anlass:["Arbeit","Allrounder"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Holzig","Pudrig","Moschus"], notes:"Weiße Rose, Moschus, Vetiver, Zeder", description:"Cremig, holzig und extrem elegant (Narciso-DNA)." },
+  { id:"55", name:"55 Black Addiction", link:"#", geschlecht:"Frau", tattoo:["Blackwork", "OldSchool"], entdecken:["Topliste","Trends"], anlass:["Ausgehen","Date"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Gourmand","Süß","Kaffee"], notes:"Schwarzer Kaffee, Vanille, weiße Blüten", description:"Süchtig machend, dunkel und süß (Black Opium-DNA)." },
+  { id:"56", name:"56 Light & Dark", link:"#", geschlecht:"Frau", tattoo:["Blackwork", "Realismus"], entdecken:[], anlass:["Ausgehen"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Süß","Würzig","Orientalisch"], notes:"Safran, Thymian, Orchidee, Tonkabohne", description:"Charismatisch, hell und dunkel zugleich (Ange Ou Demon-DNA)." },
+  { id:"57", name:"57 Pure Purple", link:"#", geschlecht:"Frau", tattoo:["Fineline"], entdecken:[], anlass:["Freizeit","Arbeit"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Blumig","Pudrig","Frisch"], notes:"Pink Grapefruit, Iris, bulgarische Rose", description:"Leicht, pudrig und verspielt (Omnia Amethyste-DNA)." },
+  { id:"64", name:"64 Talisman", link:"#", geschlecht:"Frau", tattoo:["Maori", "OldSchool"], entdecken:[], anlass:["Freizeit"], jahreszeit:["Frühling","Herbst","Sommer"], dufttyp:["Fruchtig","Holzig","Blumig"], notes:"Mandarine, indische Tuberose, Osmanthus", description:"Ein Abenteuer aus indischen Gewürzen und Früchten (Omnia Indian Garnet-DNA)." },
+  { id:"67", name:"67 Victoria", link:"#", geschlecht:"Frau", tattoo:["Realismus", "OldSchool"], entdecken:[], anlass:["Ausgehen","Date"], jahreszeit:["Frühling","Herbst","Winter","Sommer"], dufttyp:["Süß","Salzig","Orientalisch"], notes:"Salzige Vanille, Wasserjasmin, Kaschmirholz", description:"Göttliche Aura, stolz und salzig-süß (Olympéa-DNA)." },
+  { id:"70", name:"70 Pure Ego", link:"#", geschlecht:"Frau", tattoo:["Fineline", "Realismus"], entdecken:[], anlass:["Allrounder"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Blumig","Pudrig","Süß"], notes:"Pfingstrose, Zitrus, Osmanthus", description:"Verführerisch, kontrastreich und floral." },
+  { id:"71", name:"71 Sublime", link:"#", geschlecht:"Frau", tattoo:["OldSchool"], entdecken:[], anlass:["Allrounder"], jahreszeit:["Frühling","Sommer","Herbst","Winter"], dufttyp:["Fruchtig","Süß","Holzig"], notes:"Pfirsich, Aprikose, Birne, Sandelholz", description:"Klassisch fruchtig-süß (Burberry for Women-DNA)." },
+  { id:"76", name:"76 Deep Blue", link:"#", geschlecht:"Frau", tattoo:["Fineline"], entdecken:[], anlass:["Freizeit","Arbeit"], jahreszeit:["Frühling","Sommer"], dufttyp:["Aquatisch","Frisch","Zitrus"], notes:"Minzblätter, Zitrone, Wasserjasmin", description:"Unwiderstehliche Frische von Erde und Meer (Acqua di Gioia-DNA)." },
+  { id:"80", name:"80 Absolutely", link:"#", geschlecht:"Frau", tattoo:["Realismus", "OldSchool"], entdecken:[], anlass:["Allrounder","Ausgehen"], jahreszeit:["Frühling","Herbst","Sommer","Winter"], dufttyp:["Fruchtig","Holzig","Süß"], notes:"Cassis, Freesie, Mairose, Patschuli", description:"Intensiver, eleganter Chypre (Si-DNA)." },
+  { id:"81", name:"81 Allure Éternelle", link:"#", geschlecht:"Frau", tattoo:["OldSchool"], entdecken:["Topliste"], anlass:["Ausgehen","Date"], jahreszeit:["Frühling","Herbst","Sommer","Winter"], dufttyp:["Pudrig","Süß","Orientalisch"], notes:"Orangenblüte, Sternanis, Vanille", description:"Explosiv, süß und ein absoluter Klassiker (Classique-DNA)." },
+  { id:"82", name:"82 Jeunesse", link:"#", geschlecht:"Frau", tattoo:["Fineline"], entdecken:[], anlass:["Freizeit","Arbeit"], jahreszeit:["Frühling","Herbst","Sommer"], dufttyp:["Süß","Fruchtig","Pudrig"], notes:"Rote Johannisbeere, Panacotta, Pfingstrose", description:"Verspielt, süß und zart (Signorina-DNA)." },
+  { id:"85", name:"85 Serendipity", link:"#", geschlecht:"Frau", tattoo:["Realismus"], entdecken:[], anlass:["Arbeit","Allrounder"], jahreszeit:["Frühling","Herbst","Sommer"], dufttyp:["Zitrus","Patschuli","Frisch"], notes:"Rosa Pfeffer, Jasmin, Patschuli", description:"Strahlend, blumig und elegant (Chance-DNA)." },
+  { id:"89", name:"89 Ville Lumière", link:"#", geschlecht:"Frau", tattoo:["OldSchool", "Realismus"], entdecken:[], anlass:["Date","Ausgehen"], jahreszeit:["Frühling","Herbst","Sommer"], dufttyp:["Fruchtig","Süß","Patschuli"], notes:"Erdbeere, Himbeere, Stechapfel, Patschuli", description:"Sinnliche Liebesgeschichte, extrem fruchtig (Mon Paris-DNA)." },
+  { id:"90", name:"90 Femme Fatale", link:"#", geschlecht:"Frau", tattoo:["Blackwork", "OldSchool"], entdecken:[], anlass:["Ausgehen","Date"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Süß","Gourmand","Mandel"], notes:"Bitterorange, Rose, Mandel, Tonkabohne", description:"Süchtig machende, köstliche Verführung (Poison Girl-DNA)." },
+  { id:"96", name:"96 The Muse", link:"#", geschlecht:"Frau", tattoo:["Fineline", "Realismus"], entdecken:[], anlass:["Arbeit","Allrounder"], jahreszeit:["Frühling","Herbst","Sommer"], dufttyp:["Blumig","Zitrus","Frisch"], notes:"Grapefruit, Ylang-Ylang, Orangenblüte", description:"Rebellischer Geist, strahlende Blüten (Gabrielle-DNA)." },
+  { id:"97", name:"97 Vita", link:"#", geschlecht:"Frau", tattoo:["Realismus", "OldSchool"], entdecken:[], anlass:["Ausgehen","Freizeit"], jahreszeit:["Frühling","Herbst","Winter","Sommer"], dufttyp:["Süß","Vanille","Fruchtig"], notes:"Campari, schwarze Johannisbeere, Vanille", description:"Kühn und lebensfreudig (Amo Ferragamo-DNA)." },
+  { id:"98", name:"98 Euphoria", link:"#", geschlecht:"Frau", tattoo:["Fineline"], entdecken:[], anlass:["Arbeit","Freizeit"], jahreszeit:["Frühling","Herbst","Sommer"], dufttyp:["Blumig","Frisch","Zitrus"], notes:"Mandarine, Rose, Jasmin, weißer Moschus", description:"Einzigartiges Gefühl von Licht und Freude (Joy-DNA)." },
+  { id:"115", name:"115 Icon", link:"#", geschlecht:"Frau", tattoo:["Fineline", "Realismus"], entdecken:[], anlass:["Arbeit","Allrounder"], jahreszeit:["Frühling","Herbst","Sommer"], dufttyp:["Blumig","Moschus","Frisch"], notes:"Birne, Bergamotte, Rose, Moschus", description:"Stark, ehrlich, sauber und floral (Idole-DNA)." },
+  { id:"116", name:"116 Declare", link:"#", geschlecht:"Frau", tattoo:["OldSchool"], entdecken:[], anlass:["Ausgehen"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Süß","Würzig","Fruchtig"], notes:"Himbeere, Mandarine, Amber, Milch", description:"Extrem sinnlich, milchig-süß (Yes I Am-DNA)." },
+  { id:"119", name:"119 Dark Affair", link:"#", geschlecht:"Frau", tattoo:["Blackwork", "OldSchool"], entdecken:[], anlass:["Ausgehen","Date"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Süß","Honig","Blumig"], notes:"Blutorange, Honig, Patschuli, Gardenie", description:"Faszinierend, laut und süß (Scandal-DNA)." },
+  { id:"120", name:"120 Haute Couture", link:"#", geschlecht:"Frau", tattoo:["OldSchool", "Realismus"], entdecken:[], anlass:["Ausgehen","Date"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Fruchtig","Süß","Mandel"], notes:"Schwarzkirsche, Mandel, Rose, Lakritz", description:"Elegant, dunkle Kirsche und feiner Tee (La Petite Robe Noir-DNA)." },
+  { id:"121", name:"121 Secret Desire", link:"#", geschlecht:"Frau", tattoo:["Realismus", "Blackwork"], entdecken:["Topliste","Trends"], anlass:["Ausgehen","Allrounder"], jahreszeit:["Frühling","Sommer","Herbst","Winter"], dufttyp:["Blumig","Süß","Pudrig"], notes:"Tuberose, Orangenblüte, Vetiver, Patschuli", description:"Verboten gut, weiße Blüten treffen auf dunkle Hölzer (L'interdit-DNA)." },
+  { id:"133", name:"133 Enigma", link:"#", geschlecht:"Frau", tattoo:["Realismus", "Fineline"], entdecken:["Topliste"], anlass:["Allrounder"], jahreszeit:["Frühling","Sommer","Herbst"], dufttyp:["Blumig","Süß","Zitrus"], notes:"Neroli, Amber, weißer Moschus", description:"Kontrastreich, floral und modern (Paradoxe-DNA)." },
+  { id:"145", name:"145 Forever Yours", link:"#", geschlecht:"Frau", tattoo:["OldSchool"], entdecken:["Topliste"], anlass:["Ausgehen","Freizeit"], jahreszeit:["Frühling","Sommer","Herbst","Winter"], dufttyp:["Süß","Zitrus","Vanille"], notes:"Kandierte Zitrone, Orangenblüte, Vanille", description:"Strahlende, süße Zitrus-Gourmand-Verführung (Devotion-DNA)." },
+  { id:"148", name:"148 Divine Aura", link:"#", geschlecht:"Frau", tattoo:["Realismus"], entdecken:["Topliste","Trends"], anlass:["Allrounder","Ausgehen"], jahreszeit:["Frühling","Winter","Herbst"], dufttyp:["Süß","Vanille","Lavendel"], notes:"Vanille-Kaviar, Lavendel, Kakao", description:"Drei Arten von Vanille für eine goldene Aura (Goddess-DNA)." },
+  { id:"151", name:"151 To The Edge For Her", link:"#", geschlecht:"Frau", tattoo:["Realismus", "OldSchool"], entdecken:[], anlass:["Allrounder","Ausgehen"], jahreszeit:["Frühling","Sommer","Herbst","Winter"], dufttyp:["Blumig","Süß","Pudrig"], notes:"Rosa Pfeffer, Flieder, Patschuli", description:"Warm, verführerisch und mutig (Guilty-DNA)." },
+  { id:"153", name:"153 Rose Dust", link:"#", geschlecht:"Frau", tattoo:["Fineline"], entdecken:["Topliste","Trends"], anlass:["Arbeit","Allrounder"], jahreszeit:["Frühling","Sommer","Herbst"], dufttyp:["Blumig","Pudrig","Frisch"], notes:"Pfingstrose, Litschi, Rose, Zeder", description:"Klassische, saubere und frische Rose (Chloé-DNA)." },
+  { id:"154", name:"154 Liaison Rose", link:"#", geschlecht:"Frau", tattoo:["Fineline", "Realismus"], entdecken:[], anlass:["Arbeit","Allrounder"], jahreszeit:["Frühling","Sommer","Winter","Herbst"], dufttyp:["Pudrig","Blumig","Süß"], notes:"Orangenblüte, Iris, Hyazinthe, Puder", description:"Vintage-Puder und absolute Zartheit (Love Chloé-DNA)." },
+  { id:"156", name:"156 Unbending Women", link:"#", geschlecht:"Frau", tattoo:["Realismus"], entdecken:[], anlass:["Freizeit","Arbeit"], jahreszeit:["Frühling","Sommer"], dufttyp:["Fruchtig","Blumig","Frisch"], notes:"Apfel, Alpenveilchen, Sandelholz", description:"Samtig, strahlend und modern (Hugo Woman-DNA)." },
+  { id:"158", name:"158 Wild Bloom", link:"#", geschlecht:"Frau", tattoo:["Fineline", "Realismus"], entdecken:[], anlass:["Allrounder","Date"], jahreszeit:["Frühling","Herbst","Sommer"], dufttyp:["Blumig","Frisch","Fruchtig"], notes:"Pfingstrose, Zitrusfrüchte, Osmanthus", description:"Jugendlich, frisch und elegant blumig (Flora-DNA)." },
+  { id:"159", name:"159 British Charm For Her", link:"#", geschlecht:"Frau", tattoo:["Realismus"], entdecken:[], anlass:["Arbeit","Freizeit"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Fruchtig","Holzig","Süß"], notes:"Pfirsich, Aprikose, Sandelholz, Vanille", description:"Zeitloser, britischer Understatement-Chic (Burberry Women-DNA)." },
+  { id:"161", name:"161 Eternal Love For Her", link:"#", geschlecht:"Frau", tattoo:["Realismus", "OldSchool"], entdecken:["Trends"], anlass:["Ausgehen","Date"], jahreszeit:["Frühling","Winter","Herbst"], dufttyp:["Holzig","Süß","Blumig"], notes:"Schwarze Johannisbeere, Jasmin-Tee, Bourbon-Vanille", description:"Raffiniert, intensiv und rebellisch (Donna Born In Roma-DNA)." },
+  { id:"122", name:"122 Volare", link:"#", geschlecht:"Frau", tattoo:["Realismus", "Fineline"], entdecken:["Topliste","Trends"], anlass:["Allrounder","Arbeit"], jahreszeit:["Frühling","Sommer","Herbst","Winter"], dufttyp:["Lavendel","Blumig","Zitrus"], notes:"Lavendel, Mandarine, Orangenblüte, Vanille", description:"Kompromisslose Freiheit, androgyn und elegant (Libre-DNA)." },
+  { id:"131", name:"131 Chica Mala", link:"#", geschlecht:"Frau", tattoo:["Blackwork", "OldSchool"], entdecken:["Topliste","Trends"], anlass:["Ausgehen","Date"], jahreszeit:["Frühling","Winter","Herbst"], dufttyp:["Süß","Kaffee","Blumig"], notes:"Mandel, Kaffee, Tuberose, Tonkabohne", description:"Gewagt, laut und verführerisch (Good Girl-DNA)." },
+  { id:"93", name:"93 Glory", link:"#", geschlecht:"Frau", tattoo:["Realismus", "Maori"], entdecken:[], anlass:["Allrounder","Arbeit"], jahreszeit:["Frühling","Herbst","Sommer"], dufttyp:["Fruchtig","Holzig","Frisch"], notes:"Grüner Apfel, Bergamotte, Rose, Sandelholz", description:"Für die Frau, die für sich selbst eintritt (Aventus for Her-DNA)." },
+
+  // ─── HERREN (M) ───
+  { id:"1", name:"1 Prestige for Him", link:"#", geschlecht:"Mann", tattoo:["OldSchool"], entdecken:["Topliste","Trends"], anlass:["Ausgehen","Date"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Süß","Würzig","Leder"], notes:"Blutorange, Zimt, Leder, Amber", description:"Laut, süß und unverkennbar (1 Million-DNA)." },
+  { id:"2", name:"2 Deep Blue", link:"#", geschlecht:"Mann", tattoo:["Fineline"], entdecken:["Topliste","Trends"], anlass:["Freizeit","Arbeit"], jahreszeit:["Frühling","Sommer"], dufttyp:["Aquatisch","Zitrus","Frisch"], notes:"Meerwasser, Limette, Bergamotte, Zeder", description:"Mineralische Frische, der absolute Aquatik-Klassiker (Acqua di Gio-DNA)." },
+  { id:"3", name:"3 Fireborn", link:"#", geschlecht:"Mann", tattoo:["Blackwork", "Maori"], entdecken:["Topliste","Trends"], anlass:["Ausgehen"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Leder","Holzig","Würzig"], notes:"Muskatnuss, Lavendel, Zeder, Leder", description:"Kraftvoll, Benzin und heißes Leder (Fahrenheit-DNA)." },
+  { id:"4", name:"4 Pure Ego", link:"#", geschlecht:"Mann", tattoo:["Realismus"], entdecken:["Topliste","Trends"], anlass:["Date","Ausgehen"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Holzig","Würzig","Süß"], notes:"Koriander, Basilikum, Kardamom, Tabak", description:"Eleganter Tabak, warm und maskulin (The One-DNA)." },
+  { id:"12", name:"12 Revenant", link:"#", geschlecht:"Mann", tattoo:["OldSchool", "Fineline"], entdecken:[], anlass:["Arbeit","Freizeit"], jahreszeit:["Frühling","Sommer"], dufttyp:["Zitrus","Frisch","Würzig"], notes:"Zitrone, Rosmarin, Vetiver", description:"Der zeitlose, frische Barbershop-Klassiker (Eau Sauvage-DNA)." },
+  { id:"15", name:"15 Urbe", link:"#", geschlecht:"Mann", tattoo:["Realismus", "OldSchool"], entdecken:["Trends"], anlass:["Date","Freizeit"], jahreszeit:["Frühling","Sommer","Herbst","Winter"], dufttyp:["Orientalisch","Süß","Holzig"], notes:"Grapefruit, Basilikum, Zeder, Vanille", description:"Warm, sinnlich und ewig (Roma Uomo-DNA)." },
+  { id:"16", name:"16 Sailor", link:"#", geschlecht:"Mann", tattoo:["OldSchool"], entdecken:["Topliste","Trends"], anlass:["Ausgehen","Freizeit"], jahreszeit:["Frühling","Sommer","Herbst","Winter"], dufttyp:["Pudrig","Süß","Würzig"], notes:"Minze, Lavendel, Zimt, Vanille", description:"Der Matrose. Süß, minzig und maskulin (Le Male-DNA)." },
+  { id:"18", name:"18 Revelation", link:"#", geschlecht:"Mann", tattoo:["Realismus", "Fineline"], entdecken:[], anlass:["Arbeit","Allrounder"], jahreszeit:["Frühling","Sommer","Herbst"], dufttyp:["Würzig","Holzig","Zitrus"], notes:"Bitterorange, Kardamom, Zeder, Vetiver", description:"Frisch-würzige Eleganz (Déclaration-DNA)." },
+  { id:"20", name:"20 Obscuro", link:"#", geschlecht:"Mann", tattoo:["Blackwork", "Realismus"], entdecken:["Topliste","Trends"], anlass:["Date","Ausgehen"], jahreszeit:["Frühling","Winter","Herbst"], dufttyp:["Würzig","Süß","Holzig"], notes:"Kardamom, Lavendel, Zeder, Vetiver", description:"Dunkel, verführerisch, das ultimative Date-Parfüm (La Nuit de L'Homme-DNA)." },
+  { id:"21", name:"21 Aqua Soul", link:"#", geschlecht:"Mann", tattoo:["Fineline"], entdecken:["Topliste"], anlass:["Freizeit","Arbeit"], jahreszeit:["Frühling","Sommer"], dufttyp:["Zitrus","Aquatisch","Frisch"], notes:"Grapefruit, Bergamotte, Rosmarin, Moschus", description:"Mittelmeer-Frische für heiße Tage (Light Blue Homme-DNA)." },
+  { id:"22", name:"22 Elemental", link:"#", geschlecht:"Mann", tattoo:["Realismus", "Maori"], entdecken:["Topliste","Trends"], anlass:["Arbeit","Allrounder"], jahreszeit:["Frühling","Sommer","Herbst","Winter"], dufttyp:["Erdig","Zitrus","Holzig"], notes:"Orange, Grapefruit, Pfeffer, Vetiver", description:"Raue Erde trifft auf bittere Orange (Terre d'Hermès-DNA)." },
+  { id:"30", name:"30 Maverick", link:"#", geschlecht:"Mann", tattoo:["OldSchool", "Blackwork"], entdecken:[], anlass:["Ausgehen"], jahreszeit:["Frühling","Sommer","Herbst","Winter"], dufttyp:["Süß","Fruchtig","Würzig"], notes:"Zitrone, Praline, Zimt, schwarzes Patschuli", description:"Rock&Roll, süß und rebellisch (BlackXS-DNA)." },
+  { id:"31", name:"31 Real Man", link:"#", geschlecht:"Mann", tattoo:["Fineline", "Realismus"], entdecken:[], anlass:["Arbeit","Freizeit"], jahreszeit:["Frühling","Sommer","Herbst"], dufttyp:["Frisch","Würzig","Holzig"], notes:"Ingwer, Kardamom, Tabakblüte, Zeder", description:"Kühl, würzig und professionell (Blu pour Homme-DNA)." },
+  { id:"32", name:"32 Explosive", link:"#", geschlecht:"Mann", tattoo:["Blackwork", "OldSchool"], entdecken:["Topliste","Trends"], anlass:["Ausgehen","Date"], jahreszeit:["Frühling","Winter","Herbst"], dufttyp:["Würzig","Süß","Leder"], notes:"Chili, Safran, Leder, Tabak", description:"Eine absolute Gewürz-Explosion (Spice Bomb-DNA)." },
+  { id:"33", name:"33 Nightfall", link:"#", geschlecht:"Mann", tattoo:["Realismus", "Blackwork"], entdecken:[], anlass:["Date","Ausgehen"], jahreszeit:["Frühling","Winter","Herbst"], dufttyp:["Süß","Ledrig","Zitrus"], notes:"Zitrone, Sternanis, Leder, Tabak", description:"Geheimnisvoll, nachtaktiv und elegant (Black Code-DNA)." },
+  { id:"37", name:"37 Gentleman", link:"#", geschlecht:"Mann", tattoo:["Fineline", "Realismus"], entdecken:[], anlass:["Arbeit","Allrounder"], jahreszeit:["Frühling","Sommer","Winter","Herbst"], dufttyp:["Holzig","Frisch","Blumig"], notes:"Lotus, Bergamotte, Vetiver, Kaschmirholz", description:"Weißes Hemd, kühler Kopf (Man-DNA)." },
+  { id:"38", name:"38 Abyss", link:"#", geschlecht:"Mann", tattoo:["Realismus", "Fineline"], entdecken:["Topliste","Trends"], anlass:["Allrounder","Arbeit"], jahreszeit:["Frühling","Sommer","Winter","Herbst"], dufttyp:["Holzig","Zitrus","Rauchig"], notes:"Grapefruit, Minze, Ingwer, Weihrauch", description:"Der moderne blaue Signature-Duft (Bleu de Chanel-DNA)." },
+  { id:"48", name:"48 Sublime", link:"#", geschlecht:"Mann", tattoo:["Realismus"], entdecken:["Topliste","Trends"], anlass:["Allrounder","Arbeit"], jahreszeit:["Frühling","Sommer","Winter","Herbst"], dufttyp:["Frisch","Süß","Zitrus"], notes:"Zitrone, Pfirsich, Pfeffer, Tonkabohne", description:"Rund, frisch und leicht süßlich (Allure Homme-DNA)." },
+  { id:"132", name:"132 My Rules", link:"#", geschlecht:"Unisex", tattoo:["Realismus", "Fineline"], entdecken:[], anlass:["Freizeit","Arbeit"], jahreszeit:["Frühling","Sommer","Herbst"], dufttyp:["Blumig","Frisch","Süß"], notes:"Tuberose, Orangenblüte, Jasmin", description:"Regelbrecher, florale Freiheit." },
+  { id:"94", name:"94 Revenant Intense", link:"#", geschlecht:"Mann", tattoo:["Realismus", "Maori"], entdecken:["Topliste","Trends"], anlass:["Allrounder","Ausgehen"], jahreszeit:["Frühling","Sommer","Winter","Herbst"], dufttyp:["Frisch","Würzig","Holzig"], notes:"Bergamotte, Pfeffer, Ambroxan", description:"Wild, bewusst und pfeffrig-frisch (Sauvage-DNA)." },
+  { id:"136", name:"136 Modern Man", link:"#", geschlecht:"Mann", tattoo:["Fineline", "Realismus"], entdecken:["Topliste","Trends"], anlass:["Date","Arbeit"], jahreszeit:["Herbst","Winter"], dufttyp:["Pudrig","Holzig","Blumig"], notes:"Iris, Lavendel, Ambrette, Zeder", description:"Lippenstift-Iris, extrem maskulin und elegant (Homme Intense-DNA)." },
+  { id:"52", name:"52 Arabian Mirage", link:"#", geschlecht:"Mann", tattoo:["OldSchool"], entdecken:[], anlass:["Arbeit","Allrounder"], jahreszeit:["Frühling","Winter","Herbst"], dufttyp:["Holzig","Würzig","Krautig"], notes:"Minze, Thymian, Eichenmoos, Sandelholz", description:"Klassischer Fougère, extrem männlich (Pasha de Cartier-DNA)." },
+  { id:"61", name:"61 Triumph", link:"#", geschlecht:"Mann", tattoo:["OldSchool", "Realismus"], entdecken:[], anlass:["Ausgehen","Freizeit"], jahreszeit:["Frühling","Sommer","Herbst"], dufttyp:["Aquatisch","Süß","Frisch"], notes:"Grapefruit, Lorbeer, Guajakholz, Ambra", description:"Süße Aquatik, lauter Gewinner-Duft (Invictus-DNA)." },
+  { id:"62", name:"62 Extreme", link:"#", geschlecht:"Mann", tattoo:["Realismus"], entdecken:[], anlass:["Arbeit","Allrounder"], jahreszeit:["Frühling","Sommer","Herbst","Winter"], dufttyp:["Holzig","Frisch","Aromatisch"], notes:"Wassernoten, Basilikum, Lavendel, Tabak", description:"Aromatisch und tief (Intenso-DNA)." },
+  { id:"69", name:"69 Rock Soul", link:"#", geschlecht:"Mann", tattoo:["Maori", "Fineline"], entdecken:[], anlass:["Freizeit"], jahreszeit:["Frühling","Sommer"], dufttyp:["Aquatisch","Salzig","Holzig"], notes:"Myrte, Zeder, Meeresalgen", description:"Rohes Meersalz und rauer Ozean (Acqua di Sale-DNA)." },
+  { id:"79", name:"79 Seaside", link:"#", geschlecht:"Mann", tattoo:["Realismus", "Fineline"], entdecken:[], anlass:["Allrounder"], jahreszeit:["Frühling","Sommer"], dufttyp:["Zitrus","Blumig","Holzig"], notes:"Bergamotte, Orangenblüte, Patschuli", description:"Modern, sauber und ausdrucksstark (MYSELF-DNA)." },
+  { id:"84", name:"84 So True", link:"#", geschlecht:"Mann", tattoo:["Realismus", "OldSchool"], entdecken:["Topliste","Trends"], anlass:["Allrounder","Ausgehen"], jahreszeit:["Frühling","Sommer","Herbst"], dufttyp:["Aquatisch","Würzig","Holzig"], notes:"Wassernoten, Feigenblatt, Ambroxan, Weihrauch", description:"Dunkelblau, frisch und extrem vielseitig (Dylan Blue-DNA)." },
+  { id:"86", name:"86 Indigo", link:"#", geschlecht:"Mann", tattoo:["Fineline"], entdecken:[], anlass:["Arbeit","Freizeit"], jahreszeit:["Frühling","Sommer","Herbst","Winter"], dufttyp:["Fruchtig","Frisch","Holzig"], notes:"Lavendel, Ananas, roter Apfel, Tonkabohne", description:"Fruchtiger Barbershop, extrem gefällig (Legend-DNA)." },
+  { id:"87", name:"87 Titan", link:"#", geschlecht:"Mann", tattoo:["OldSchool", "Blackwork"], entdecken:["Topliste","Trends"], anlass:["Ausgehen"], jahreszeit:["Frühling","Sommer","Herbst"], dufttyp:["Süß","Würzig","Holzig"], notes:"Zitrone, Ingwer, Kardamom, Tonkabohne", description:"Laut, würzig und dominant (Wanted-DNA)." },
+  { id:"88", name:"88 Wildman", link:"#", geschlecht:"Mann", tattoo:["Blackwork", "Maori"], entdecken:[], anlass:["Ausgehen","Date"], jahreszeit:["Winter","Herbst"], dufttyp:["Gewürze","Leder","Rum"], notes:"Rum, Tabak, Leder, Guajakholz", description:"Heißer Rum und Leder. Pures Feuer (Man in Black-DNA)." },
+  { id:"91", name:"91 Midnight Man", link:"#", geschlecht:"Mann", tattoo:["Fineline"], entdecken:[], anlass:["Freizeit","Arbeit"], jahreszeit:["Frühling","Sommer"], dufttyp:["Frisch","Zitrus","Metallisch"], notes:"Rosmarin, Ananas, Neroli, Eichenmoos", description:"Metallische Frische, wie eine scharfe Klinge (Chrome-DNA)." },
+  { id:"140", name:"140 Cupid", link:"#", geschlecht:"Mann", tattoo:["OldSchool", "Realismus"], entdecken:["Topliste","Trends"], anlass:["Ausgehen"], jahreszeit:["Frühling","Sommer","Herbst","Winter"], dufttyp:["Minze","Süß","Vanille"], notes:"Minze, grüner Apfel, Tonkabohne, Vanille", description:"Der Club-König. Laut, minzig und extrem süß (Eros-DNA)." },
+  { id:"147", name:"147 Dark Nectar", link:"#", geschlecht:"Mann", tattoo:["Realismus", "OldSchool"], entdecken:["Topliste"], anlass:["Allrounder","Arbeit"], jahreszeit:["Herbst","Winter"], dufttyp:["Fruchtig","Zimt","Holzig"], notes:"Apfel, Pflaume, Zimt, Mahagoni", description:"Apfelkuchen mit Holz. Der Business-Klassiker (Bottled-DNA)." },
+  { id:"150", name:"150 Unbending Man", link:"#", geschlecht:"Mann", tattoo:["Fineline"], entdecken:[], anlass:["Freizeit","Arbeit"], jahreszeit:["Frühling","Herbst","Sommer"], dufttyp:["Frisch","Grün","Würzig"], notes:"Grüner Apfel, Lavendel, Kiefer, Tanne", description:"Grün, frisch und unnachgiebig (Hugo-DNA)." },
+  { id:"152", name:"152 To The Edge For Him", link:"#", geschlecht:"Mann", tattoo:["Realismus"], entdecken:[], anlass:["Date","Ausgehen"], jahreszeit:["Frühling","Sommer","Herbst"], dufttyp:["Zitrus","Holzig","Blumig"], notes:"Lavendel, Zitrone, Orangenblüte, Zeder", description:"Verführerisch, weich und maskulin (Guilty pour Homme-DNA)." },
+  { id:"157", name:"157 Aftertouch", link:"#", geschlecht:"Mann", tattoo:["Realismus", "Blackwork"], entdecken:[], anlass:["Date","Ausgehen"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Fruchtig","Leder","Würzig"], notes:"Ingwer, Maninka-Frucht, Leder", description:"Exotische Frucht trifft auf dunkles Leder (Boss The Scent-DNA)." },
+  { id:"160", name:"160 Britisch Charm For Him", link:"#", geschlecht:"Mann", tattoo:["Realismus", "Fineline"], entdecken:[], anlass:["Arbeit","Allrounder"], jahreszeit:["Frühling","Sommer","Herbst"], dufttyp:["Holzig","Frisch","Aromatisch"], notes:"Minze, Lavendel, Zeder, Thymian", description:"Very British. Holz und Pfefferminz (Burberry for Men-DNA)." },
+  { id:"162", name:"162 Eternal Love For Him", link:"#", geschlecht:"Mann", tattoo:["Realismus", "OldSchool"], entdecken:["Trends"], anlass:["Ausgehen","Date"], jahreszeit:["Herbst","Winter","Frühling"], dufttyp:["Süß","Vanille","Würzig"], notes:"Vanille, Lavendel, Vetiver", description:"Dunkle Vanille, laut und rebellisch (Uomo Born In Roma Intense-DNA)." },
+  { id:"68", name:"68 Majesty", link:"#", geschlecht:"Mann", tattoo:["Realismus", "Maori"], entdecken:["Topliste","Trends"], anlass:["Allrounder","Arbeit"], jahreszeit:["Frühling","Sommer","Herbst"], dufttyp:["Fruchtig","Rauchig","Holzig"], notes:"Ananas, Birke, Moschus, Eichenmoos", description:"Der König. Rauchige Ananas und pure Macht (Aventus-DNA)." },
+  { id:"113", name:"113 Your Journey", link:"#", geschlecht:"Mann", tattoo:["Realismus", "Fineline"], entdecken:[], anlass:["Freizeit","Arbeit"], jahreszeit:["Frühling","Sommer","Herbst"], dufttyp:["Zitrus","Leder","Frisch"], notes:"Zitrone, kalabrische Bergamotte, rosa Pfeffer, Leder", description:"Reise ins Ungewisse, frisch und ledrig (Sur La Route-DNA)." },
+
+  // ─── LUXURY / UNISEX ───
+  { id:"74", name:"74 Essence Noire", link:"#", geschlecht:"Unisex", tattoo:["Blackwork"], entdecken:["Topliste"], anlass:["Ausgehen"], jahreszeit:["Herbst","Winter"], dufttyp:["Holzig","Rauchig","Harzig"], notes:"Cannabis, grüne Noten, Harze, Tabak, Kaffee, Oud", description:"Hypnotisch, tiefschwarz und extrem rauchig (Black Afgano-DNA)." },
+  { id:"75", name:"75 Xcellence", link:"#", geschlecht:"Unisex", tattoo:["Realismus"], entdecken:[], anlass:["Ausgehen","Date"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Holzig","Würzig","Blumig"], notes:"Kardamom, rosa Pfeffer, Iris, Vetiver, Zimt", description:"Königlich, komplex und extrem reichhaltig (X for Men-DNA)." },
+  { id:"101", name:"101 Soft Caress", link:"#", geschlecht:"Unisex", tattoo:["Realismus", "Fineline"], entdecken:[], anlass:["Allrounder","Date"], jahreszeit:["Herbst","Winter","Frühling"], dufttyp:["Pudrig","Süß","Harzig"], notes:"Seidenbaum, Iris, Opoponax, Ambra", description:"Wie weiche Haut. Amber und Seide (Velvet Amber Skin-DNA)." },
+  { id:"102", name:"102 Soft Rays", link:"#", geschlecht:"Unisex", tattoo:["Realismus", "Maori"], entdecken:[], anlass:["Ausgehen"], jahreszeit:["Herbst","Winter"], dufttyp:["Harzig","Rauchig","Holzig"], notes:"Ylang-Ylang, Sandelholz, Amberholz, Vanille", description:"Heißer Sand und glühende Sonne (Velvet Amber Sun-DNA)." },
+  { id:"106", name:"106 Rebel Icon", link:"#", geschlecht:"Unisex", tattoo:["Maori", "Blackwork"], entdecken:["Trends"], anlass:["Ausgehen","Arbeit"], jahreszeit:["Frühling","Sommer","Herbst","Winter"], dufttyp:["Holzig","Würzig","Ledrig"], notes:"Rosenholz, Kardamom, Oud, Vetiver, Tonkabohne", description:"Das ultimative, elegante Holz-Statement (Oud Wood-DNA)." },
+  { id:"109", name:"109 Pure Gold Intense", link:"#", geschlecht:"Frau", tattoo:["Realismus", "Fineline"], entdecken:["Topliste"], anlass:["Ausgehen"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Blumig","Süß","Orientalisch"], notes:"Jasmin, Mairose, Vanille, Tonkabohne", description:"Flüssiges Gold, extrem dichte Blüten (J'adore L'or-DNA)." },
+  { id:"111", name:"111 Ruby Love", link:"#", geschlecht:"Unisex", tattoo:["OldSchool"], entdecken:["Topliste"], anlass:["Ausgehen","Date"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Süß","Gourmand","Fruchtig"], notes:"Schwarze Kirsche, Bittermandel, Likör, Peru-Balsam", description:"Süß, klebrig, Kirsche und purer Sex (Lost Cherry-DNA)." },
+  { id:"124", name:"124 Everlasting", link:"#", geschlecht:"Unisex", tattoo:["Blackwork", "OldSchool"], entdecken:[], anlass:["Ausgehen","Date"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Würzig","Süß","Rauchig"], notes:"Tabakblatt, Gewürze, Tonkabohne, Vanille, Kakao", description:"Zigarren-Lounge und schwere Vanille (Tobacco Vanille-DNA)." },
+  { id:"125", name:"125 Mediterraneo", link:"#", geschlecht:"Unisex", tattoo:["Fineline"], entdecken:[], anlass:["Freizeit","Arbeit"], jahreszeit:["Frühling","Sommer"], dufttyp:["Zitrus","Weißblüher","Frisch"], notes:"Bergamotte, Mandarine, Neroli, Orangenblüte", description:"Italienische Riviera, hell und seifig-frisch (Neroli Portofino-DNA)." },
+  { id:"126", name:"126 Lumière Dorée", link:"#", geschlecht:"Unisex", tattoo:["Fineline", "Realismus"], entdecken:["Topliste"], anlass:["Freizeit","Allrounder"], jahreszeit:["Frühling","Sommer"], dufttyp:["Sonnencreme","Blumig","Süß"], notes:"Pistazie, Bergamotte, Ylang-Ylang, Kokosnuss", description:"Luxuriöse Sonnencreme am Privatstrand (Soleil Blanc-DNA)." },
+  { id:"127", name:"127 Agar Forest", link:"#", geschlecht:"Unisex", tattoo:["Blackwork", "Maori"], entdecken:["Topliste","Trends"], anlass:["Ausgehen"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Holzig","Rauchig","Oud"], notes:"Agarholz (Oud), Weihrauch, Himbeere, Rose", description:"Mystisches Oud und tiefer Rauch (Ombre Nomade-DNA)." },
+  { id:"128", name:"128 Sugar Poison", link:"#", geschlecht:"Unisex", tattoo:["OldSchool", "Realismus"], entdecken:[], anlass:["Ausgehen","Date"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Kaffee","Süß","Rose"], notes:"Blumige Noten, Rose, Kaffee, Vanille, weißer Moschus", description:"Intensiver Kaffee trifft auf gezuckerte Rose (Intense Cafe-DNA)." },
+  { id:"129", name:"129 Chlorophyll", link:"#", geschlecht:"Unisex", tattoo:["Fineline"], entdecken:["Trends"], anlass:["Allrounder","Freizeit"], jahreszeit:["Frühling","Herbst","Sommer"], dufttyp:["Frisch","Grün","Metallisch"], notes:"Bergamotte, Mandarine, Grüner Tee, schwarze Johannisbeere", description:"Eiskaltes, klares Bergwasser (Silver Mountain Water-DNA)." },
+  { id:"130", name:"130 Oceanic Pulse", link:"#", geschlecht:"Unisex", tattoo:["Maori", "Blackwork"], entdecken:[], anlass:["Allrounder","Freizeit"], jahreszeit:["Frühling","Sommer","Herbst"], dufttyp:["Aquatisch","Salzig","Holzig"], notes:"Meerwasser, Ozon, Algen, Ambra", description:"Die rohe, dunkle Urgewalt des Ozeans (Megamare-DNA)." },
+  { id:"134", name:"134 Orange Nectar", link:"#", geschlecht:"Unisex", tattoo:["Fineline", "Realismus"], entdecken:[], anlass:["Freizeit"], jahreszeit:["Frühling","Herbst","Sommer"], dufttyp:["Zitrus","Kräuter","Frisch"], notes:"Zitrone, Grapefruit, Minze, Orangenblüte", description:"Spritzige Mandarinen von der Amalfiküste (Mandarino di Amalfi-DNA)." },
+  { id:"118", name:"118 Scarlet Fire", link:"#", geschlecht:"Unisex", tattoo:["Realismus", "Fineline"], entdecken:["Topliste","Trends"], anlass:["Allrounder","Ausgehen"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Süß","Holzig","Blumig"], notes:"Safran, Jasmin, Amberwood, Tannenharz", description:"Transparent, medizinisch-süß und unendlich präsent (Baccarat Rouge 540-DNA)." },
+  { id:"123", name:"123 Sweet Rebel", link:"#", geschlecht:"Unisex", tattoo:["Realismus", "OldSchool"], entdecken:[], anlass:["Allrounder","Ausgehen"], jahreszeit:["Frühling","Sommer","Herbst"], dufttyp:["Süß","Vanille","Pudrig"], notes:"Kakao, Vanille, grauer Amber", description:"Süß, tief und rebellisch (ZETA-DNA)." },
+  { id:"112", name:"112 Riviera", link:"#", geschlecht:"Unisex", tattoo:["Fineline"], entdecken:[], anlass:["Freizeit","Arbeit"], jahreszeit:["Frühling","Sommer"], dufttyp:["Zitrus","Weißblüher","Frisch"], notes:"Mandarine, Zitrone, Petitgrain, Ylang-Ylang", description:"Sonnig, zitrisch und floral (Sole di Positano-DNA)." },
+  { id:"117", name:"117 Velvet Smoke", link:"#", geschlecht:"Unisex", tattoo:["Blackwork", "OldSchool"], entdecken:["Topliste","Trends"], anlass:["Ausgehen"], jahreszeit:["Herbst","Winter"], dufttyp:["Leder","Mandel","Krautig"], notes:"Muskatellersalbei, Lavendel, Bittermandel, Leder, Tonka", description:"Leder, Mandeln und pure Arroganz (Fucking Fabulous-DNA)." },
+  { id:"137", name:"137 Sicilian Garden", link:"#", geschlecht:"Unisex", tattoo:["Realismus", "OldSchool"], entdecken:["Topliste","Trends"], anlass:["Ausgehen","Date"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Vanille","Rauchig","Harzig"], notes:"Rum, Myrrhe, Frangipani, Kaffee, Madagaskar-Vanille", description:"Rauchige, dunkle und fatale Vanille (Vanille Fatale-DNA)." },
+  { id:"138", name:"138 Woodland", link:"#", geschlecht:"Unisex", tattoo:["OldSchool", "Realismus"], entdecken:[], anlass:["Allrounder","Ausgehen"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Fruchtig","Süß","Moschus"], notes:"Orange, Zitrone, Bergamotte, Früchte, weißer Moschus", description:"Ein lauter, synthetischer Früchtekorb auf Moschus (Erba Pura-DNA)." },
+  { id:"139", name:"139 Sahara Blush", link:"#", geschlecht:"Unisex", tattoo:["Realismus"], entdecken:[], anlass:["Date","Ausgehen"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Rose","Oud","Würzig"], notes:"Rose, Agarholz, Ambergris, schwarzer Pfeffer", description:"Heiße Wüste, Rose und Oud (Les Sables Roses-DNA)." },
+  { id:"141", name:"141 Sands of Time", link:"#", geschlecht:"Unisex", tattoo:["Realismus", "Maori"], entdecken:[], anlass:["Ausgehen"], jahreszeit:["Herbst","Winter"], dufttyp:["Holzig","Würzig","Trocken"], notes:"Trockenfrüchte, Gewürze, Oud, Sandelholz", description:"Das alte Erbe Dubais. Komplex und staubig (Turath-DNA)." },
+  { id:"143", name:"143 Sweet Dust", link:"#", geschlecht:"Unisex", tattoo:["Fineline", "Realismus"], entdecken:[], anlass:["Allrounder"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Vanille","Pudrig","Holzig"], notes:"Vanille-Absolue, Kokosnusspulver, Palo Santo", description:"Trockene, pudrige Vanille und helles Holz (Vanilla Powder-DNA)." },
+  { id:"144", name:"144 Creamy Dream", link:"#", geschlecht:"Unisex", tattoo:["OldSchool", "Realismus"], entdecken:[], anlass:["Ausgehen","Freizeit"], jahreszeit:["Herbst","Winter","Frühling"], dufttyp:["Gourmand","Milchig","Süß"], notes:"Karamell, Cumarin, Honig, weiße Vanille", description:"Heiße, süße Milch mit Karamell (Bianco Latte-DNA)." },
+  { id:"146", name:"146 Scarlet Flame", link:"#", geschlecht:"Unisex", tattoo:["Realismus"], entdecken:["Trends"], anlass:["Ausgehen","Date"], jahreszeit:["Herbst","Winter","Frühling","Sommer"], dufttyp:["Holzig","Blumig","Süß"], notes:"Rote Blüten, Amber, warme Hölzer", description:"Brennend rote Leidenschaft (Rouge Balmain-DNA)." },
+
+  // ─── EVENT DÜFTE ───
+  { id:"EVENT22", name:"EVENT22-Europe", link:"#", geschlecht:"Unisex", tattoo:["Realismus"], entdecken:["Topliste","Trends"], anlass:["Allrounder"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Würzig","Pudrig","Holzig"], notes:"Spezial-Edition, warme Noten", description:"Exklusive Jubiläums-Komposition." },
+  { id:"EVENT23M", name:"EVENT23M-Mystère", link:"#", geschlecht:"Mann", tattoo:["Blackwork", "Realismus"], entdecken:["Topliste","Trends"], anlass:["Ausgehen"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Holzig","Rauchig","Mystisch"], notes:"Dunkle Hölzer, mystische Gewürze", description:"Das Geheimnis von Paris." },
+  { id:"EVENT23W", name:"EVENT23W-Séduction", link:"#", geschlecht:"Frau", tattoo:["Fineline", "OldSchool"], entdecken:["Topliste","Trends"], anlass:["Date"], jahreszeit:["Frühling","Winter","Herbst"], dufttyp:["Blumig","Süß","Verführerisch"], notes:"Süße Blüten, Puder, Moschus", description:"Die Verführung von Paris." },
+  { id:"MULTIVERSE", name:"MULTIVERSE", link:"#", geschlecht:"Mann", tattoo:["Realismus"], entdecken:["Topliste","Trends"], anlass:["Allrounder"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Zitrus","Holzig","Modern"], notes:"Futuristische Hölzer, metallische Noten", description:"Édition Futur. Grenzenlose Möglichkeiten." },
+  { id:"ASTRAL24", name:"ASTRAL24", link:"#", geschlecht:"Frau", tattoo:["Realismus"], entdecken:["Topliste","Trends"], anlass:["Allrounder"], jahreszeit:["Frühling","Winter","Herbst","Sommer"], dufttyp:["Blumig","Fruchtig","Süß"], notes:"Sternenstaub, süße Beeren, weiße Blüten", description:"Édition Futur. Greif nach den Sternen." },
+  { id:"NADIR", name:"NADIR", link:"#", geschlecht:"Mann", tattoo:["OldSchool", "Blackwork"], entdecken:["Topliste","Trends"], anlass:["Ausgehen"], jahreszeit:["Frühling","Herbst","Winter"], dufttyp:["Würzig","Leder","Holzig"], notes:"Leder, Amber, dunkle Hölzer", description:"10 Years Together - Rom. Purer Luxus." },
+  { id:"IMPERATRIX", name:"IMPERATRIX", link:"#", geschlecht:"Frau", tattoo:["Realismus", "OldSchool"], entdecken:["Topliste","Trends"], anlass:["Ausgehen"], jahreszeit:["Frühling","Winter","Herbst","Sommer"], dufttyp:["Gourmand","Süß","Blumig"], notes:"Karamell, weiße Blüten, edle Vanille", description:"10 Years Together - Rom. Die Kaiserin." },
+
+  // ─── KIDS ───
+  { id:"45", name:"45 Baby Boy", link:"#", geschlecht:"Kids", tattoo:[], entdecken:["Topliste","Trends"], anlass:["Freizeit"], jahreszeit:["Frühling","Sommer"], dufttyp:["Frisch","Sanft"], notes:"Kamille, frische Luft", description:"Sanft und hypoallergen für Jungen." },
+  { id:"58", name:"58 Baby Girl", link:"#", geschlecht:"Kids", tattoo:[], entdecken:["Topliste","Trends"], anlass:["Freizeit"], jahreszeit:["Frühling","Sommer"], dufttyp:["Süß","Blumig"], notes:"Sanfte Blüten, leichter Puder", description:"Frisch und hypoallergen für kleine Mädchen." },
+  { id:"59", name:"59 Baby Joy", link:"#", geschlecht:"Kids", tattoo:[], entdecken:["Topliste","Trends"], anlass:["Freizeit"], jahreszeit:["Frühling","Sommer"], dufttyp:["Frisch","Zitrus"], notes:"Zarte Zitrone, saubere Wäsche", description:"Leicht und unbeschwert." }
+];
+
+/* ─── State & Weights ──────────────────────────────────────────── */
+let selectedFilters = {};
+const weights = { tattoo: 5, dufttyp: 3, anlass: 1, jahreszeit: 1, entdecken: 0.5 };
+
+function toggleFilter(cat, val) {
+  if (cat === 'geschlecht') {
+    if (selectedFilters.geschlecht?.[0] === val) delete selectedFilters.geschlecht;
+    else selectedFilters = { geschlecht: [val] }; 
+  } else {
+    if (!selectedFilters.geschlecht?.length) return;
+    if (!selectedFilters[cat]) selectedFilters[cat] = [];
+    const idx = selectedFilters[cat].indexOf(val);
+    if (idx === -1) selectedFilters[cat].push(val);
+    else selectedFilters[cat].splice(idx, 1);
+  }
+  syncButtons(); unlockSections(); updateProgress(); filterResults();
+}
+
+function syncButtons() {
+  document.querySelectorAll('.pill[data-cat]').forEach(btn => {
+    btn.classList.toggle('selected', !!selectedFilters[btn.dataset.cat]?.includes(btn.dataset.val));
+  });
+}
+
+function unlockSections() {
+  const hasGender = !!selectedFilters.geschlecht?.length;
+  ['sec-tattoo','sec-anlass','sec-dufttyp', 'sec-jahreszeit', 'sec-entdecken'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('locked', !hasGender);
+  });
+}
+
+function updateProgress() {
+  const hasGender = !!selectedFilters.geschlecht?.length;
+  const hasFilters = hasGender && Object.keys(selectedFilters).length > 1;
+  const hasResults = document.querySelectorAll('.card').length > 0;
+  document.getElementById('step1').className = 'step ' + (hasGender ? 'done' : 'active');
+  document.getElementById('step2').className = 'step ' + (hasFilters ? 'done' : hasGender ? 'active' : '');
+  document.getElementById('step3').className = 'step ' + (hasResults ? 'active' : '');
+  document.getElementById('line1').className = 'step-line ' + (hasGender ? 'done' : '');
+  document.getElementById('line2').className = 'step-line ' + (hasResults ? 'done' : '');
+}
+
+function resetFilters() {
+  selectedFilters = {}; syncButtons(); unlockSections(); updateProgress();
+  document.getElementById('countBadge').innerHTML = '<span>Wähle zuerst einen Typ</span>';
+  document.getElementById('resultsArea').innerHTML = `<div class="oracle-message"><span class="oracle-icon">🔮</span><p>Wähle oben aus.</p></div>`;
+}
+
+function calcScore(parfum) {
+  let score = 0, max = 0, details = [];
+  for (const cat in selectedFilters) {
+    if (cat === 'geschlecht') continue;
+    const vals = selectedFilters[cat];
+    if (!vals?.length) continue;
+    const w = weights[cat] || 1;
+    const data = parfum[cat] || [];
+    vals.forEach(v => {
+      max += w;
+      const hit = data.includes(v);
+      if (hit) score += w;
+      details.push({ cat, val: v, hit });
+    });
+  }
+  return { raw: score, pct: max ? Math.round((score/max)*100) : 0, details };
+}
+
+function filterResults() {
+  const area = document.getElementById('resultsArea');
+  const badge = document.getElementById('countBadge');
+  if (!selectedFilters.geschlecht?.length) return resetFilters();
+
+  let list = parfums.filter(p => selectedFilters.geschlecht.includes(p.geschlecht)).map(p => ({ ...p, sc: calcScore(p) }));
+  const hasOtherFilters = Object.keys(selectedFilters).some(k => k !== 'geschlecht' && selectedFilters[k].length);
+
+  if (hasOtherFilters) {
+    list = list.filter(p => p.sc.pct > 0);
+    list.sort((a, b) => b.sc.raw - a.sc.raw || b.sc.pct - a.sc.pct);
+    if (!list.length) {
+      area.innerHTML = `<div class="oracle-message"><span class="oracle-icon">💀</span><p>Kein Match. Passe deine Filter an.</p></div>`;
+      badge.innerHTML = '<strong>0</strong><span>Matches</span>';
+      return;
+    }
+    const best = list[0].sc.raw;
+    list.forEach((p, i) => p.sc.display = i === 0 ? 100 : Math.round((p.sc.raw / best) * 99));
+  } else {
+    list.sort((a, b) => a.name.localeCompare(b.name));
+    list.forEach(p => p.sc.display = null);
+  }
+
+  badge.innerHTML = `<strong>${list.length}</strong><span>Matches</span>`;
+  area.innerHTML = `
+    <div class="results-section">
+      <div class="results-header"><h2>${hasOtherFilters ? 'Dein Statement-Match' : 'Alle Düfte'}</h2></div>
+      <div class="results-grid">${list.map((p, i) => buildCard(p, i, hasOtherFilters)).join('')}</div>
+    </div>`;
+  updateProgress();
+}
+
+function buildCard(p, i, showScore) {
+  const isWinner = showScore && i === 0;
+  const isRunnerUp = showScore && i > 0 && i < 3;
+  let cls = 'card';
+  if (isWinner) cls += ' winner';
+  else if (isRunnerUp) cls += ' runner-up';
+
+  const tags = showScore && p.sc.details.length ? `<div class="match-tags">${p.sc.details.map(d => `<span class="match-tag ${d.hit ? 'hit' : 'miss'}">${d.hit ? '✓' : '✗'} ${d.val}</span>`).join('')}</div>` : '';
+  const notesHtml = p.notes ? `<div class="card-notes">🧬 Noten: ${p.notes}</div>` : '';
+
+  return `
+    <div class="${cls}">
+      ${isWinner ? `<div class="winner-badge">⭐ The Final Touch</div>` : ''}
+      <div class="card-name">${p.name}</div>
+      ${showScore ? `<div style="display:flex;align-items:center;gap:8px;"><div class="score-bar"><div class="score-fill" style="width:${p.sc.display}%"></div></div><div class="score-num">${p.sc.display}%</div></div>` : ''}
+      ${notesHtml}
+      <p class="card-desc">${p.description}</p>
+      ${tags}
+      <a class="card-cta" href="${p.link}" target="_blank">Auswählen</a>
+    </div>`;
+}
+</script>
+</body>
+</html>
